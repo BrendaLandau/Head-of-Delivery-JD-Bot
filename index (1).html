@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Head of Delivery Operations — CI</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --black: #000000;
+    --sky: #00BEFD;
+    --light-blue: #00d6f2;
+    --azure: #0387FE;
+    --grey: #80868A;
+    --magenta: #FF1E8E;
+    --white: #FFFFFF;
+    --border: rgba(0,190,253,0.2);
+    --radius: 12px;
+  }
+
+  body {
+    font-family: 'Roboto', sans-serif;
+    background: var(--black);
+    color: var(--white);
+    min-height: 100vh;
+  }
+
+  /* PASSWORD SCREEN */
+  #lock-screen {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--black);
+    flex-direction: column;
+    gap: 2rem;
+    padding: 2rem;
+  }
+
+  .lock-card {
+    background: rgba(0,190,253,0.05);
+    border: 0.5px solid rgba(0,190,253,0.3);
+    border-radius: var(--radius);
+    padding: 2.5rem 2rem;
+    width: 100%;
+    max-width: 360px;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .lock-card h2 {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.25rem;
+    color: var(--sky);
+    font-weight: 400;
+  }
+
+  .lock-card p {
+    font-size: 13px;
+    color: rgba(255,255,255,0.75);
+    line-height: 1.6;
+  }
+
+  .lock-input {
+    width: 100%;
+    background: rgba(255,255,255,0.05);
+    border: 0.5px solid rgba(0,190,253,0.4);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 15px;
+    color: var(--white);
+    font-family: 'Roboto', sans-serif;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .lock-input:focus { border-color: var(--sky); }
+  .lock-input::placeholder { color: rgba(255,255,255,0.25); }
+
+  .lock-btn {
+    width: 100%;
+    background: var(--sky);
+    border: none;
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 14px;
+    font-family: 'Roboto', sans-serif;
+    font-weight: 700;
+    color: var(--black);
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    letter-spacing: 0.02em;
+  }
+
+  .lock-btn:hover { background: var(--light-blue); }
+  .lock-btn:active { transform: scale(0.98); }
+
+  .lock-error {
+    font-size: 12px;
+    color: var(--magenta);
+    text-align: center;
+    display: none;
+  }
+
+  /* MAIN APP */
+  #app {
+    display: none;
+    flex-direction: column;
+    height: 100vh;
+  }
+
+  .top-bar {
+    background: var(--black);
+    padding: 0.75rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid rgba(0,190,253,0.25);
+  }
+
+  .top-bar-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .top-bar-logo {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.1rem;
+    color: var(--sky);
+    letter-spacing: 0.06em;
+    font-weight: 400;
+  }
+
+  .top-bar-divider {
+    width: 1px;
+    height: 20px;
+    background: rgba(0,190,253,0.2);
+  }
+
+  .top-bar-title {
+    font-size: 13px;
+    color: rgba(255,255,255,0.75);
+    letter-spacing: 0.03em;
+  }
+
+  .top-bar-user {
+    font-size: 12px;
+    color: rgba(255,255,255,0.35);
+  }
+
+  .main-layout {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* JD PANEL */
+  .jd-panel {
+    width: 42%;
+    background: #0a0a0a;
+    border-right: 1px solid rgba(0,190,253,0.15);
+    overflow-y: auto;
+    padding: 2rem 1.75rem;
+  }
+
+  .jd-panel::-webkit-scrollbar { width: 4px; }
+  .jd-panel::-webkit-scrollbar-track { background: transparent; }
+  .jd-panel::-webkit-scrollbar-thumb { background: rgba(0,190,253,0.2); border-radius: 2px; }
+
+  .jd-eyebrow {
+    font-family: 'Roboto', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--sky);
+    margin-bottom: 0.5rem;
+  }
+
+  .jd-role-title {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.5rem;
+    color: var(--white);
+    line-height: 1.2;
+    margin-bottom: 0.4rem;
+    font-weight: 400;
+  }
+
+  .jd-meta {
+    font-size: 12px;
+    color: rgba(255,255,255,0.75);
+    margin-bottom: 1.75rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid rgba(0,190,253,0.12);
+  }
+
+  .jd-section { margin-bottom: 1.5rem; }
+
+  .jd-section-label {
+    font-family: 'Roboto', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--sky);
+    opacity: 0.7;
+    margin-bottom: 0.6rem;
+  }
+
+  .jd-section p {
+    font-size: 13px;
+    color: rgba(255,255,255,0.75);
+    line-height: 1.7;
+  }
+
+  .jd-section ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .jd-section li {
+    font-size: 13px;
+    color: rgba(255,255,255,0.75);
+    line-height: 1.6;
+    padding-left: 1rem;
+    position: relative;
+  }
+
+  .jd-section li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 9px;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--sky);
+  }
+
+  .jd-divider {
+    height: 1px;
+    background: rgba(0,190,253,0.1);
+    margin: 1.5rem 0;
+  }
+
+  /* CHAT PANEL */
+  .chat-panel {
+    width: 58%;
+    display: flex;
+    flex-direction: column;
+    background: #050505;
+  }
+
+  .chat-header {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid rgba(0,190,253,0.15);
+    background: #050505;
+  }
+
+  .chat-header-top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 4px;
+  }
+
+  .chat-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(0,190,253,0.15);
+    border: 1px solid rgba(0,190,253,0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--sky);
+    font-family: 'Roboto', sans-serif;
+    flex-shrink: 0;
+  }
+
+  .chat-header h2 {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 15px;
+    font-weight: 400;
+    color: var(--white);
+  }
+
+  .chat-header p {
+    font-size: 12px;
+    color: rgba(255,255,255,0.75);
+    padding-left: 42px;
+  }
+
+  .messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    background: #030303;
+  }
+
+  .messages::-webkit-scrollbar { width: 4px; }
+  .messages::-webkit-scrollbar-track { background: transparent; }
+  .messages::-webkit-scrollbar-thumb { background: rgba(0,190,253,0.2); border-radius: 2px; }
+
+  .msg {
+    max-width: 85%;
+    padding: 11px 15px;
+    font-size: 14px;
+    line-height: 1.65;
+    border-radius: 16px;
+    animation: fadeUp 0.2s ease;
+    font-family: 'Roboto', sans-serif;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .msg.user {
+    align-self: flex-end;
+    background: var(--azure);
+    color: var(--white);
+    border-bottom-right-radius: 4px;
+  }
+
+  .msg.bot {
+    align-self: flex-start;
+    background: #111;
+    color: rgba(255,255,255,0.85);
+    border: 0.5px solid rgba(0,190,253,0.2);
+    border-bottom-left-radius: 4px;
+  }
+
+  .msg.bot.thinking {
+    color: rgba(255,255,255,0.75);
+    font-style: italic;
+  }
+
+  .chips-wrap {
+    padding: 0 1.5rem 0.75rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    background: #030303;
+  }
+
+  .chip {
+    font-size: 12px;
+    padding: 5px 12px;
+    border-radius: 999px;
+    border: 0.5px solid rgba(0,190,253,0.35);
+    color: var(--sky);
+    cursor: pointer;
+    background: transparent;
+    transition: all 0.15s;
+    font-family: 'Roboto', sans-serif;
+  }
+
+  .chip:hover {
+    background: var(--sky);
+    color: var(--black);
+    border-color: var(--sky);
+  }
+
+  .input-area {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid rgba(0,190,253,0.15);
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+    background: #050505;
+  }
+
+  .input-area textarea {
+    flex: 1;
+    resize: none;
+    border: 0.5px solid rgba(0,190,253,0.25);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 14px;
+    font-family: 'Roboto', sans-serif;
+    min-height: 42px;
+    max-height: 100px;
+    line-height: 1.5;
+    color: var(--white);
+    background: #111;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .input-area textarea:focus { border-color: var(--sky); }
+  .input-area textarea::placeholder { color: rgba(255,255,255,0.75); }
+
+  .send-btn {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    border: none;
+    background: var(--sky);
+    color: var(--black);
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background 0.15s, transform 0.1s;
+    font-weight: 700;
+  }
+
+  .send-btn:hover { background: var(--light-blue); }
+  .send-btn:active { transform: scale(0.96); }
+  .send-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+</style>
+</head>
+<body>
+
+<!-- PASSWORD SCREEN -->
+<div id="lock-screen">
+  <div class="lock-card">
+    <h2>Welcome, Mike</h2>
+    <p>Brenda has set up this tool to help you understand the Head of Delivery Operations role. Enter your access code to get started.</p>
+    <input class="lock-input" type="password" id="pwd-input" placeholder="Enter access code" onkeydown="if(event.key==='Enter') checkPwd()">
+    <button class="lock-btn" id="lock-btn" onclick="checkPwd()">Access JD Assistant</button>
+    <div class="lock-error" id="pwd-error">Incorrect code. Please try again.</div>
+    <div id="lockout-msg" style="display:none; flex-direction:column; gap:12px;">
+      <p style="font-size:13px; color:rgba(255,255,255,0.75); line-height:1.6;">It looks like you are having a little trouble getting in. Would you like to keep trying or would you prefer to schedule some time with Brenda directly?</p>
+      <button class="lock-btn" onclick="resetAttempts()">Keep Trying</button>
+      <a href="mailto:brenda@connectedintelligence.com?subject=JD Assistant Access&body=Hi Brenda, I was trying to access the JD Assistant and ran into some trouble. Can we find some time to connect?" style="display:block; text-align:center; font-size:13px; color:var(--sky); padding:10px; border:0.5px solid rgba(0,190,253,0.35); border-radius:8px; text-decoration:none;">Schedule Time with Brenda</a>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+  <div class="top-bar">
+    <div class="top-bar-left">
+      <div class="top-bar-title">Head of Delivery Operations — JD Assistant</div>
+    </div>
+    <div class="top-bar-user">For Mike Santomarco</div>
+  </div>
+
+  <div class="main-layout">
+    <!-- JD PANEL -->
+    <div class="jd-panel">
+      <div class="jd-eyebrow">Job Description</div>
+      <div class="jd-role-title">Head of Delivery Operations</div>
+      <div class="jd-meta">Leadership Team &nbsp;·&nbsp; Reports to: CEO</div>
+
+      <div class="jd-section">
+        <div class="jd-section-label">About CI</div>
+        <p>CI is an AI-first technology company that designs, builds, and operates AI-powered digital systems for enterprise and mid-market organizations in regulated industries.</p>
+      </div>
+
+      <div class="jd-divider"></div>
+
+      <div class="jd-section">
+        <div class="jd-section-label">Position summary</div>
+        <p>This role owns delivery vision, strategy, and implementation across CI. It is a Leadership Team seat with full accountability for how CI delivers, at what quality, and at what velocity. The right candidate brings operational rigor, business and financial literacy, and enough technical grounding to lead AI-first delivery credibly. This is not a role for a single-dimension operator.</p>
+      </div>
+
+      <div class="jd-divider"></div>
+
+      <div class="jd-section">
+        <div class="jd-section-label">Delivery vision, strategy and implementation</div>
+        <ul>
+          <li>Define and own CI's delivery vision and translate it into a clear executable strategy</li>
+          <li>Build the delivery roadmap across all delivery models with quarterly milestones</li>
+          <li>Lead delivery implementation end to end from standards-setting through measurement</li>
+          <li>Own the delivery operating model and drive it to completion</li>
+          <li>Ensure delivery strategy is aligned to sales, financial goals, technical standards, and AI adoption objectives</li>
+        </ul>
+      </div>
+
+      <div class="jd-divider"></div>
+
+      <div class="jd-section">
+        <div class="jd-section-label">Core responsibilities</div>
+        <ul>
+          <li>Own and lead the delivery organization, driving team performance, accountability, and execution standards across all delivery functions</li>
+          <li>Drive delivery velocity, margin performance, and client satisfaction</li>
+          <li>Lead AI-first delivery execution including adoption targets and delivery standards</li>
+          <li>Establish delivery governance structures and execution frameworks that scale</li>
+          <li>Coordinate cross-functional execution across sales, engineering, AI and Development, and clients</li>
+          <li>Partner closely with the leadership team to execute strategic operational initiatives</li>
+        </ul>
+      </div>
+
+      <div class="jd-divider"></div>
+
+      <div class="jd-section">
+        <div class="jd-section-label">What you will step into</div>
+        <p>Build first, run second. Come in with a vision, build the strategy, and then own the delivery organization you designed. If you are looking for a traditional PMO role, this is not it. If you want to own delivery end to end and build the function around you, it is.</p>
+      </div>
+
+      <div class="jd-divider"></div>
+
+      <div class="jd-section">
+        <div class="jd-section-label">What we are looking for</div>
+        <ul>
+          <li>7+ years of delivery or operations leadership in technology services, SaaS, or AI-driven environments, with at least 3 years in a senior seat and 6 to 12 months of demonstrable hands-on AI tool experience</li>
+          <li>Operational delivery leadership experience inside enterprise technology, SaaS, AI-driven organizations, or digital transformation consulting</li>
+          <li>Demonstrated experience setting delivery vision and strategy, not just managing delivery execution</li>
+          <li>Experience working directly with a Leadership Team and contributing as a peer, not a layer below</li>
+          <li>Ability to build operational frameworks from the ground up in a fast-moving environment</li>
+          <li>Strong cross-functional leadership across delivery, sales, engineering, and client-facing teams</li>
+          <li>Executive communication and client-facing presence</li>
+          <li>Familiarity with structured operating frameworks such as EOS or Scaling Up</li>
+          <li>Proficiency with Salesforce and a PSA platform is required. Certinia (formerly FinancialForce) experience is strongly preferred</li>
+          <li>Active use of AI productivity tools is expected. Candidates should be current AI tool users, not AI-curious observers</li>
+          <li>Proven people leadership experience. You will build and lead the delivery team you design</li>
+          <li>Sufficient platform fluency to lead delivery credibly across CI's technology stack, including Salesforce and Certinia. You do not need to be an engineer, but you need to understand how these platforms work well enough to build delivery procedures</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- CHAT PANEL -->
+    <div class="chat-panel">
+      <div class="chat-header">
+        <div class="chat-header-top">
+          <div class="chat-avatar">BL</div>
+          <h2>Hi Mike Santomarco</h2>
+        </div>
+        <p>Brenda built this JD — ask me anything about it and I will explain it in plain English</p>
+      </div>
+
+      <div class="messages" id="messages">
+        <div class="msg bot">Hi Mike Santomarco! Brenda asked me to help you understand this Job Description. She put a lot of thought into every single section and I am here to walk you through any of it. There are no silly questions — just ask away and I will explain everything in plain English.</div>
+      </div>
+
+      <div class="chips-wrap" id="chips">
+        <span class="chip" onclick="askChip(this)">Why is this not a PMO role?</span>
+        <span class="chip" onclick="askChip(this)">What does build first mean?</span>
+        <span class="chip" onclick="askChip(this)">What is Certinia?</span>
+        <span class="chip" onclick="askChip(this)">Why 7+ years experience?</span>
+        <span class="chip" onclick="askChip(this)">What is AI-first delivery?</span>
+        <span class="chip" onclick="askChip(this)">Where should we post this role?</span>
+      </div>
+
+      <div class="input-area">
+        <textarea id="userInput" placeholder="Ask anything about this role..." rows="1" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+        <button class="send-btn" id="sendBtn" onclick="sendMessage()" aria-label="Send">&#8593;</button>
+        <button class="pdf-btn" id="pdfBtn" onclick="downloadPDF()" style="display:none; height:42px; padding:0 14px; border-radius:10px; border:0.5px solid rgba(0,190,253,0.35); background:transparent; color:var(--sky); font-size:12px; font-family:'Roboto',sans-serif; cursor:pointer; white-space:nowrap; transition:all 0.15s;" title="Download transcript as PDF">&#8595; PDF</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+function downloadPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+  const pageW = doc.internal.pageSize.getWidth();
+  const pageH = doc.internal.pageSize.getHeight();
+  const margin = 20;
+  const maxW = pageW - margin * 2;
+  let y = margin;
+
+  doc.setFillColor(0, 0, 0);
+  doc.rect(0, 0, pageW, pageH, 'F');
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
+  doc.setTextColor(0, 190, 253);
+  doc.text('CI — Connected Intelligence', margin, y);
+  y += 7;
+
+  doc.setFontSize(16);
+  doc.setTextColor(255, 255, 255);
+  doc.text('Head of Delivery Operations', margin, y);
+  y += 7;
+
+  doc.setFontSize(9);
+  doc.setTextColor(128, 134, 138);
+  doc.text('JD Assistant — Chat Transcript', margin, y);
+  y += 5;
+  doc.text('For: Mike Santomarco     Date: ' + new Date().toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' }), margin, y);
+  y += 8;
+
+  doc.setDrawColor(0, 190, 253);
+  doc.setLineWidth(0.3);
+  doc.line(margin, y, pageW - margin, y);
+  y += 8;
+
+  const msgEls = document.querySelectorAll('.msg');
+  msgEls.forEach(el => {
+    const isUser = el.classList.contains('user');
+    const label = isUser ? 'Mike Santomarco' : 'JD Assistant';
+    const color = isUser ? [0, 135, 254] : [0, 190, 253];
+    const textColor = isUser ? [200, 230, 255] : [220, 245, 255];
+
+    doc.setFontSize(8);
+    doc.setTextColor(...color);
+    doc.setFont('helvetica', 'bold');
+    doc.text(label, margin, y);
+    y += 5;
+
+    doc.setFontSize(10);
+    doc.setTextColor(...textColor);
+    doc.setFont('helvetica', 'normal');
+    const lines = doc.splitTextToSize(el.textContent, maxW);
+    lines.forEach(line => {
+      if (y > pageH - margin - 10) {
+        doc.addPage();
+        doc.setFillColor(0, 0, 0);
+        doc.rect(0, 0, pageW, pageH, 'F');
+        y = margin;
+      }
+      doc.text(line, margin, y);
+      y += 5.5;
+    });
+    y += 4;
+
+    if (y > pageH - margin - 10) {
+      doc.addPage();
+      doc.setFillColor(0, 0, 0);
+      doc.rect(0, 0, pageW, pageH, 'F');
+      y = margin;
+    }
+  });
+
+  doc.setDrawColor(0, 190, 253);
+  doc.setLineWidth(0.3);
+  if (y + 12 < pageH - margin) {
+    doc.line(margin, y, pageW - margin, y);
+    y += 6;
+  }
+  doc.setFontSize(8);
+  doc.setTextColor(128, 134, 138);
+  doc.text('Prepared by Brenda Landau, CFO — CI Connected Intelligence', margin, y);
+
+  doc.save('CI_Head_of_Delivery_JD_Transcript_Mike_Santomarco.pdf');
+}
+
+function resetAttempts() {
+  attempts = 0;
+  document.getElementById('lockout-msg').style.display = 'none';
+  document.getElementById('pwd-input').disabled = false;
+  document.getElementById('lock-btn').disabled = false;
+  document.getElementById('pwd-input').focus();
+}
+
+let attempts = 0;
+
+function checkPwd() {
+  const val = document.getElementById('pwd-input').value.trim().toLowerCase();
+  if (val === 'mike') {
+    document.getElementById('lock-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+  } else {
+    attempts++;
+    document.getElementById('pwd-input').value = '';
+    if (attempts >= 5) {
+      document.getElementById('pwd-error').style.display = 'none';
+      document.getElementById('lockout-msg').style.display = 'flex';
+      document.getElementById('pwd-input').disabled = true;
+      document.getElementById('lock-btn').disabled = true;
+    } else {
+      document.getElementById('pwd-error').style.display = 'block';
+      document.getElementById('pwd-error').textContent = 'Incorrect code. ' + (5 - attempts) + ' attempt' + (5 - attempts === 1 ? '' : 's') + ' remaining.';
+    }
+  }
+}
+
+const SYSTEM_PROMPT = `You are a JD explainer assistant built by Brenda Landau, CFO at CI (Connected Intelligence). You are talking to Mike Santomarco, the head recruiter at CI.
+
+Your job is to help Mike Santomarco understand the Head of Delivery Operations Job Description that Brenda built. Mike is senior and experienced in recruiting but is not technical, so explain everything in very simple plain language.
+
+Key rules:
+- Always address the recruiter as "Mike" or "Mike Santomarco"
+- Always refer to the person who built this JD as "Brenda"
+- Explain everything in very simple plain language with no jargon
+- Keep answers short, warm, and conversational
+- Never use bullet points, write in simple conversational sentences
+- Always connect your explanation back to why Brenda made that decision
+- Be patient, encouraging, and friendly
+- If Mike asks something you do not know, say "That is a great question for Brenda directly, Mike — she will give you the full picture on that one"
+
+Key context about the JD and why Brenda built it this way:
+- CI is an AI-first technology company going through a major transformation to become an AI-as-a-Service company
+- This role is NOT a traditional PMO role. Brenda was very deliberate about this. A PMO manages processes and coordinates projects. This role owns the entire delivery function, sets the vision, and builds it from scratch.
+- Build first run second means the person comes in for the first 90 days to set the vision, strategy, and implementation plan, and then takes over running the delivery organization. Someone is already keeping things running in the meantime. This is intentionally left as a conversation for the interview, not spelled out in the JD.
+- The role reports to the CEO
+- Certinia formerly FinancialForce is a business software platform that sits on top of Salesforce. Think of it like the control center for how CI runs its client work — it tracks projects, resources, finances, and services all in one place. Brenda made this a hard requirement because it is very difficult to train someone on this platform from scratch.
+- Salesforce is the company's system for tracking all client relationships. Certinia sits on top of Salesforce and tracks how the actual work gets done and billed.
+- Brenda requires 7 plus years because this is a senior leadership seat on the Leadership Team, not a mid level role.
+- AI tool experience of 6 to 12 months is required because CI is an AI-first company and this person needs to actually use AI tools in their daily work, not just know about them in theory.
+- The role serves clients in regulated industries like healthcare, financial services, and life sciences.
+- The sourcing for this role should be delivery leadership, professional services, and technology operations communities. NOT PMO job boards. Even modern PMO candidates are not the right fit for this role.
+- The compensation benchmark is 160000 to 210000 base, with total compensation of 185000 to 250000 all in including bonus.
+- People leadership is required. The person will build and lead the delivery team they design.
+- This is a Leadership Team seat, meaning this person sits alongside the most senior leaders at CI and contributes as a peer.
+- Technical fluency is required. The candidate does not need to be an engineer but needs to understand the platforms well enough to build delivery procedures and lead delivery teams credibly.
+- KOVADO is an internal name at CI — do not mention it unless Mike asks specifically.
+- Do not mention the AI Champions program by name unless Mike asks specifically about internal programs.`;
+
+const messages = [];
+
+async function sendMessage() {
+  const input = document.getElementById('userInput');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  autoResize(input);
+  addMessage('user', text);
+  messages.push({ role: 'user', content: text });
+  document.getElementById('sendBtn').disabled = true;
+  document.getElementById('chips').style.display = 'none';
+  const thinking = addMessage('bot', 'Let me check what Brenda put together on that...', true);
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: SYSTEM_PROMPT,
+        messages: messages
+      })
+    });
+    const data = await res.json();
+    const reply = data.content?.[0]?.text || 'Sorry Mike, I could not get an answer right now. Please try again.';
+    thinking.remove();
+    addMessage('bot', reply);
+    messages.push({ role: 'assistant', content: reply });
+    document.getElementById('pdfBtn').style.display = 'block';
+  } catch(e) {
+    thinking.remove();
+    addMessage('bot', 'Something went wrong Mike. Please try your question again.');
+  }
+  document.getElementById('sendBtn').disabled = false;
+}
+
+function addMessage(role, text, thinking = false) {
+  const container = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = `msg ${role}${thinking ? ' thinking' : ''}`;
+  div.textContent = text;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+  return div;
+}
+
+function askChip(el) {
+  document.getElementById('userInput').value = el.textContent;
+  sendMessage();
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 100) + 'px';
+}
+</script>
+</body>
+</html>
